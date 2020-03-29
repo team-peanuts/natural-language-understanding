@@ -1,0 +1,27 @@
+variables:
+  IMAGE_TAG: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME
+  LATEST_TAG: $CI_REGISTRY/$CI_PROJECT_PATH:latest
+
+stages:
+- dockerize
+- deploy
+
+
+dockerize:
+  image: docker:latest
+  stage: dockerize
+  script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - docker build --pull -t $IMAGE_TAG .
+  - docker push $IMAGE_TAG
+
+deploy:
+  image: docker:latest
+  stage: deploy
+  script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  - docker pull $IMAGE_TAG
+  - docker tag $IMAGE_TAG $LATEST_TAG
+  - docker push $LATEST_TAG
+  only:
+  - master
